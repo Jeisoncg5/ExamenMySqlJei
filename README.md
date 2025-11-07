@@ -159,26 +159,28 @@ Select para entrar a la tabla nombreProducto Count para saber el numero de filas
 **Total de ingresos generados por cada combo**
 
 ```sql
-
+SELECT c.nombreCombo, SUM(pc.precioProductoCombo) AS ingresos_generados
+FROM Combos c
+JOIN Productos_Combo pc ON c.idCombos = pc.idCombo
 ```
 
-
+Select para entrar a la tabla nombreCombo Sum para sumar el numero total de columnas y asi saber los ingresos generados por cada combo.
 
 **Pedidos realizados para recoger vs. comer en la pizzería**
 
-
-
 ```sql
-
+SELECT p.pedidos_Productos,pd.pedidos AS ComerAfuera
+FROM pedidos_Productos p
+JOIN Pedidos pc ON pd.idPedido = pd.idPedidos
 ```
-
-
 
 **Adiciones más solicitadas en pedidos personalizados**
 
-
-
 ```sql
+SELECT fe.nombreFormaEntrega, COUNT(pp.idpedido_Productos) AS cantidad_pedidos
+FROM forma_Entrega fe
+JOIN pedidos_Productos pp ON fe.idFormaEntrega = pp.idFormaEntrega
+GROUP BY fe.idFormaEntrega;
 
 ```
 
@@ -186,9 +188,12 @@ Select para entrar a la tabla nombreProducto Count para saber el numero de filas
 
 **Cantidad total de productos vendidos por categoría**
 
-
-
 ```sql
+SELECT a.nombreAdicion, COUNT(pa.idpedidos_Adiciones) AS cantidad_solicitada
+FROM Adiciones a
+JOIN pedidos_Adiciones pa ON a.idAdiciones = pa.idAdicion
+GROUP BY a.idAdiciones
+ORDER BY cantidad_solicitada DESC;
 
 ```
 
@@ -197,6 +202,11 @@ Select para entrar a la tabla nombreProducto Count para saber el numero de filas
 **Promedio de pizzas pedidas por cliente**
 
 ```sql
+SELECT tp.nombreTipoProducto, COUNT(pp.idproducto_Productos) AS cantidad_vendida
+FROM tipo_Productos tp
+JOIN Productos p ON tp.idtipo_Productos = p.idtipo_Producto
+JOIN pedidos_Productos pp ON p.idProductos = pp.idProducto
+GROUP BY tp.idtipo_Productos;
 
 ```
 
@@ -205,6 +215,15 @@ Select para entrar a la tabla nombreProducto Count para saber el numero de filas
 **Total de ventas por día de la semana**
 
 ```sql
+SELECT AVG(cantidad_pedida) AS promedio_pizzas
+FROM (
+    SELECT idClientes, COUNT(pp.idProducto) AS cantidad_pedida
+    FROM Pedidos p
+    JOIN pedidos_Productos pp ON p.idPedidos = pp.idPedidos
+    JOIN Productos pr ON pp.idProducto = pr.idProductos
+    WHERE pr.nombreProducto LIKE '%Pizza%'
+    GROUP BY idClientes
+) AS subconsulta;
 
 ```
 
@@ -213,6 +232,9 @@ Select para entrar a la tabla nombreProducto Count para saber el numero de filas
 **Cantidad de panzarottis vendidos con extra queso**
 
 ```sql
+SELECT DAYNAME(p.fechaPedido) AS dia_semana, SUM(p.precioPedidoTotal) AS total_ventas
+FROM Pedidos p
+GROUP BY dia_semana;
 
 ```
 
@@ -223,6 +245,11 @@ Select para entrar a la tabla nombreProducto Count para saber el numero de filas
 
 
 ```sql
+SELECT COUNT(pp.idProducto) AS cantidad_vendida
+FROM pedidos_Productos pp
+JOIN Productos p ON pp.idProducto = p.idProductos
+JOIN pedidos_Adiciones pa ON pp.idPedidos = pa.idPedido
+WHERE p.nombreProducto LIKE '%Panzarotti%' AND pa.idAdicion = 1; -- Extra Queso
 
 ```
 
@@ -231,6 +258,10 @@ Select para entrar a la tabla nombreProducto Count para saber el numero de filas
 
 
 ```sql
+SELECT COUNT(DISTINCT pp.idPedidos) AS cantidad_pedidos
+FROM pedidos_Productos pp
+JOIN Productos p ON pp.idProducto = p.idProductos
+WHERE p.nombreProducto LIKE '%Bebida%';
 
 ```
 
@@ -239,12 +270,20 @@ Select para entrar a la tabla nombreProducto Count para saber el numero de filas
 
 
 ```sql
+SELECT idClientes, COUNT(idPedidos) AS cantidad_pedidos
+FROM Pedidos
+WHERE fechaPedido > CURDATE() - INTERVAL 1 MONTH
+GROUP BY idClientes
+HAVING cantidad_pedidos > 5;
 
 ```
 
 **Promedio de adiciones por pedido**
 
 ```sql
+SELECT SUM(p.precioProducto) AS ingresos_no_elaborados
+FROM Productos p
+WHERE p.idtipo_Producto IN (3, 4);  -- 3: Bebidas, 4: Postres
 
 ```
 
@@ -253,64 +292,12 @@ Select para entrar a la tabla nombreProducto Count para saber el numero de filas
 **Total de combos vendidos en el último mes**
 
 ```sql
-
-```
-
-
-
-**Clientes con pedidos tanto para recoger como para consumir en el lugar**
-
-
-
-```sql
-
-```
-
-**Total de productos personalizados con adiciones**
-
-
-
-```sql
-
-```
-
-**Pedidos con más de 3 productos diferentes**
-
-```sql
-
-```
-
-
-
-**Promedio de ingresos generados por día**
-
-```sql
-
-```
-
-
-
-**Clientes que han pedido pizzas con adiciones en más del 50% de sus pedidos**
-
-```sql
-
-```
-
-
-
-**Porcentaje de ventas provenientes de productos no elaborados**
-
-
-
-```sql
-
-```
-
-**Día de la semana con mayor número de pedidos para recoger**
-
-
-
-```sql
+SELECT AVG(cantidad_adiciones) AS promedio_adiciones
+FROM (
+    SELECT idPedido, COUNT(idAdicion) AS cantidad_adiciones
+    FROM pedidos_Adiciones
+    GROUP BY idPedido
+) AS subconsulta;
 
 ```
 
